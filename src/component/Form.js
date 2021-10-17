@@ -25,7 +25,7 @@ const Form = () => {
     }
   };
     const uploadImage = async (data) => {
-      const url = "http://localhost:8000/convert";
+      const url = "https://www.dipikesh.me/convert";
 
       try {
         const response = await axios.post(url, data, {
@@ -64,7 +64,7 @@ const onFormSubmit = async (event) => {
   }
   const response = await uploadImage(bodyFormData);
   if (response) {
-    window.open(`http://localhost:8000/pdf?fileName=${response.data.data}`, "_blank");
+    window.open(`https://www.dipikesh.me/pdf?fileName=${response.data.data}`, "_blank");
   }
 };
     
