@@ -1,84 +1,97 @@
-import React, { useState } from 'react'
-import axios from 'axios'
-import Compressor from 'compressorjs';
-
+import React from "react";
+import axios from "axios";
+import Compressor from "compressorjs";
 
 const Form = () => {
-  const [compressedFiles, setCompressedFile] = useState([]);
-  
-  const handleCompressedUpload = async (e) => {
-    console.log('Uploading compressed files on change length', e.target.files.length);
-    const len = e.target.files.length;
-    for (var i = 0; i < len; i++) {
-    var image = e.target.files[i];
-    console.log("Image to be compressed: " + image);
+  const bodyFormData = new FormData();
+  var checkLen = 0;
 
-      await new Compressor(image, {
+
+  const handleCompressedUpload = async (files) => {
+    console.log("Uploading compressed files on change length", files[1]);
+
+    const len = files.length;
+    for (var i = 0; i < len; i++) {
+      new Compressor(files[i], {
         quality: 0.8, // 0.6 can also be used, but its not recommended to go below.
         success: (compressedResult) => {
-          // compressedResult has the compressed file.
-          // Use the compressed file to upload the images to your server.
-          console.log("compressed image  is ", compressedResult)
-          setCompressedFile([...compressedFiles, compressedResult]);
+          console.log("compressed image  is ", compressedResult);
+          bodyFormData.append("file", compressedResult, compressedResult.name);
         },
       });
     }
+    checkLen = 1;
+    
   };
-    const uploadImage = async (data) => {
-      const url = "https://www.dipikesh.me/convert";
+  const uploadImage = async (data) => {
+    const url = "https://dipikesh.me/convert";
 
-      try {
-        const response = await axios.post(url, data, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          // onUploadProgress(progressEvent) {
-          //   console.log({ progressEvent });
-          //   document.getElementById("load").innerHTML = "Uploading";
-          // },
-        });
+    try {
+      const response = await axios.post(url, data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-        console.log("res", response);
+      console.log("res", response);
 
-        return response;
-      } catch (err) {
-        alert("Image Limit or size exceeded");
+      return response;
+    } catch (err) {
+      if (err.status === 500) alert("Internal server error");
+      else if (err.status === 400) alert("Upload Image with limited size");
+      else {
+        alert("Something went wrong, try again");
       }
-    };
-const onFormSubmit = async (event) => {
-  event.preventDefault();
-  const bodyFormData = new FormData();
-  
-  const length = event.target.image.files.length;
-  for (let k = 0; k < length; k++) {
-    bodyFormData.append('image', compressedFiles[k]);
-  }
+    }
+  };
 
-  console.log("bodyFormData", bodyFormData);
-  
+  const onFormSubmit = async (event) => {
+    event.preventDefault();
+   
 
+    const length = event.target.image.files.length;
+    if (!length) return alert("Please upload an image");
+    //  if (!checkLen) return alert("Image is compressing, wait a second");
+    // event.target.image.value = null;
 
-  if (!bodyFormData) {
-    alert("Please Upload jpg or png File");
-    return;
-  }
-  const response = await uploadImage(bodyFormData);
-  if (response) {
-    window.open(`https://www.dipikesh.me/pdf?fileName=${response.data.data}`, "_blank");
-  }
+    console.log("bodyFormData", [...bodyFormData.entries()]);
+
+    if (!bodyFormData) {
+      alert("Please Upload jpg or png File");
+      return;
+    }
+
+    const response = await uploadImage(bodyFormData);
+    bodyFormData.delete("file");
+    if (response) {
+      event.preventDefault();
+
+      window.open(`https://dipikesh.me/pdf?fileName=${response.data.data}`);
+      event.preventDefault();
+    }
+  };
+
+  return (
+    <form id="form" encType="multipart/form-data" onSubmit={onFormSubmit}>
+      <input
+        type="file"
+        className="btn-file"
+        accept="image/*"
+        id="image"
+        name="image"
+        onChange={(event) => {
+          handleCompressedUpload(event.target.files);
+        }}
+        multiple
+      />
+      <input
+        type="submit"
+        id="submit"
+        className='btn'
+        value="Upload"
+      ></input>
+    </form>
+  );
 };
-    
-  
 
-    return (
-        <form id="form" onSubmit={onFormSubmit}>
-              <input type="file" multiple="multiple" className="btn-file" id="image" onChange={(event)=>handleCompressedUpload(event)}></input>
-            <input type="submit" id="submit" className="btn" value="Upload" ></input>
-          
-        </form>
-    )
-
-    
-}
-
-export default Form
+export default Form;
