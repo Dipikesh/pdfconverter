@@ -52,7 +52,7 @@ const Form = () => {
     const length = event.target.image.files.length;
     if (!length) return alert("Please upload an image");
     //  if (!checkLen) return alert("Image is compressing, wait a second");
-    // event.target.image.value = null;
+    event.target.image.value = null;
 
     console.log("bodyFormData", [...bodyFormData.entries()]);
 
